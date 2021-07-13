@@ -1,0 +1,8 @@
+{
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "required": true,
+  "package": "me.ctidy.mcmod.demo.mixin",
+  "mixins": [
+  ]
+}

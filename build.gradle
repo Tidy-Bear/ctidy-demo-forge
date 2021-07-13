@@ -1,22 +1,23 @@
 buildscript {
     repositories {
         mavenLocal()
-        maven { url = "https://repo.spongepowered.org/maven" }
         maven { url = 'https://lss233.littleservice.cn/repositories/minecraft' }
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = "https://repo.spongepowered.org/maven" }
+        maven { url = 'https://maven.parchmentmc.org' }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+        classpath 'org.parchmentmc:librarian:1.+'  // parchment mapping
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'  // parchment mapping
 apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'maven-publish'
 
 def BUILD_NUMBER = System.getenv("BUILD_NUMBER") ?: version_patch
 
@@ -24,27 +25,36 @@ group = "${group_base_id}.${group_sub_id}"
 archivesBaseName = archives_base_id
 version = "${minecraft_version}-${version_major}.${version_minor}.${BUILD_NUMBER}-${version_phase}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 println('Java: ' + System.getProperty('java.version'))
 println('JVM:  ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ')')
 println('Arch: ' + System.getProperty('os.arch'))
 
+println("System Proxies: ${System.getProperty('java.net.useSystemProxies')}")
+println("Proxy HTTP: ${System.getProperty('http.proxyHost')}:${System.getProperty('http.proxyPort')}")
+println("Proxy HTTPS: ${System.getProperty('https.proxyHost')}:${System.getProperty('https.proxyPort')}")
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
     // Channel:   Version:
-    // snapshot   YYYYMMDD   Snapshot are built nightly.
-    // stable     #          Stables are built at the discretion of the MCP team.
     // official   MCVersion  Official field/method names from Mojang mapping files
+    // parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official
     //
     // You must be aware of the Mojang license when using the 'official' mappings.
     // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
     //
+    // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
+    // Additional setup is needed to use their mappings: https://github.com/ParchmentMC/Parchment/wiki/Getting-Started
+    //
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
     mappings channel: mappings_channel, version: mappings_version
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
-    
+
+    // an Srg named sources jar is made by default, uncomment this to disable.
+    // makeObfSourceJar = false
+
+    // With AccessTransformer (AT), some private fields or methods in minecraft code will be public after configuration.
+    // uncomment this to enable AT in the project.
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     // Default run configurations.
@@ -52,6 +62,9 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run/client')
+
+            // log4j2 bug fix
+            property 'log4j2.formatMsgNoLookups', 'true'
 
             // logging data for a userdev environment
             // The markers can be changed as needed.
@@ -66,7 +79,7 @@ minecraft {
             property 'forge.logging.console.level', 'info'
 
             // mixin
-            property 'mixin.env.disableRefMap', 'true'
+            // property 'mixin.env.disableRefMap', 'true'
 
             // Necessary for VisualVM
             property 'com.sun.management.jmxremote', 'true'
@@ -85,11 +98,14 @@ minecraft {
         server {
             workingDirectory project.file('run/server')
 
+            // log4j2 bug fix
+            property 'log4j2.formatMsgNoLookups', 'true'
+
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
 
             // mixin
-            property 'mixin.env.disableRefMap', 'true'
+            // property 'mixin.env.disableRefMap', 'true'
 
             // disable default GUI, use IDE console to enter commands instead
             args '-nogui'
@@ -104,11 +120,14 @@ minecraft {
         data {
             workingDirectory project.file('run/data')
 
+            // log4j2 bug fix
+            property 'log4j2.formatMsgNoLookups', 'true'
+
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
 
             // mixin
-            property 'mixin.env.disableRefMap', 'true'
+            // property 'mixin.env.disableRefMap', 'true'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             args '--mod', modid, '--all', '--output', file('src/main/data/'), '--existing', file('src/main/resources/')
@@ -135,8 +154,11 @@ repositories {
         url = "https://repo.spongepowered.org/maven"
     }
     maven {
-        name = "Curse Maven"
-        url = "https://www.cursemaven.com"
+        name "Curse Maven"
+        url "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
     }
     maven {  // location of the maven that hosts JEI files
         name = "Progwml6 maven"
@@ -146,22 +168,10 @@ repositories {
         name = "ModMaven"
         url = "https://modmaven.k-4u.nl"
     }
-//    maven {  // Because JEI has a ridiculous FTB dependency now
-//        url = 'https://maven.latmod.com/'
-//    }
-    maven {  // AutoRegLib, Quark, patchouli, etc.
-        name = "blamejared"
-        url = "http://maven.blamejared.com/"
-    }
-    maven {  // curios
-        name = "theillusivec4"
-        url = "https://maven.theillusivec4.top/"
-    }
     maven {
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven/"
     }
-    jcenter()
     mavenCentral()
 }
 
@@ -179,15 +189,28 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8:processor'
     testAnnotationProcessor 'org.spongepowered:mixin:0.8:processor'
 
-    implementation fg.deobf("curse.maven:AppleSkin-248787:3358019")               // forge-1.16.x-2.0.0 since 2021/6/19
-
     compileOnly fg.deobf("mezz.jei:${jei_artifact_id}:${jei_version}:api")
 
     runtimeOnly fg.deobf("mezz.jei:${jei_artifact_id}:${jei_version}")
-    runtimeOnly fg.deobf("curse.maven:JustEnoughCharacters-250702:3376190")       // 4.3.0 since 2021/7/4
-    runtimeOnly fg.deobf("curse.maven:XaeroMinimap-263420:3375900")               // 21.12.5 since 2021/7/4
-    runtimeOnly fg.deobf("curse.maven:XaeroWorldmap-317780:3375878")              // 1.14.5 since 2021/7/4
+    runtimeOnly fg.deobf("curse.maven:JustEnoughCharacters-250702:${jech_version}")
+    runtimeOnly fg.deobf("curse.maven:Jade-324717:${jade_version}")
+    runtimeOnly fg.deobf("curse.maven:AppleSkin-248787:${appleskin_version}")
+    runtimeOnly fg.deobf("curse.maven:XaeroMinimap-263420:${xaerominimap_version}")
+    runtimeOnly fg.deobf("curse.maven:XaeroWorldmap-317780:${xaeroworldmap_version}")
 
+}
+
+mixin {
+    add sourceSets.main, 'mixins.ctidydemo.refmap.json'
+    config 'mixins.ctidydemo.json'
+
+    debug.verbose = true
+    debug.export = true
+    dumpTargetOnFailure = true
+    checks = true
+    hotSwap = true
+
+    extraMappings file("build/createMcpToSrg/output.tsrg")
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
@@ -198,9 +221,10 @@ jar {
             "Specification-Vendor": author_name,
             "Specification-Version": "1", // We are version 1 of ourselves
             "Implementation-Title": project.name,
-            "Implementation-Version": version,
+            "Implementation-Version": archiveVersion,
             "Implementation-Vendor" : author_name,
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            "MixinConfigs": "mixins.ctidedemo.json"
         ])
     }
 }
@@ -222,5 +246,9 @@ publishing {
             url "file:///${project.projectDir}/mcmodsrepo"
         }
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
