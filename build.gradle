@@ -25,7 +25,7 @@ group = "${group_base_id}.${group_sub_id}"
 archivesBaseName = archives_base_id
 version = "${minecraft_version}-${version_major}.${version_minor}.${BUILD_NUMBER}-${version_phase}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println('Java: ' + System.getProperty('java.version'))
 println('JVM:  ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ')')
@@ -78,6 +78,9 @@ minecraft {
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             property 'forge.logging.console.level', 'info'
 
+            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
+            property 'forge.enabledGameTestNamespaces', "${modid}"
+
             // mixin
             // property 'mixin.env.disableRefMap', 'true'
 
@@ -98,11 +101,12 @@ minecraft {
         server {
             workingDirectory project.file('run/server')
 
-            // log4j2 bug fix
             property 'log4j2.formatMsgNoLookups', 'true'
 
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
+
+            property 'forge.enabledGameTestNamespaces', "${modid}"
 
             // mixin
             // property 'mixin.env.disableRefMap', 'true'
@@ -117,14 +121,39 @@ minecraft {
             }
         }
 
+        // This run config launches GameTestServer and runs all registered gametests, then exits.
+        // By default, the server will crash when no gametests are provided.
+        // The gametest system is also enabled by default for other run configs under the /test command.
+        gameTestServer {
+            workingDirectory project.file('run/gametest')
+
+            property 'log4j2.formatMsgNoLookups', 'true'
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            property 'forge.logging.console.level', 'info'
+
+            property 'forge.enabledGameTestNamespaces', "${modid}"
+
+            // mixin
+            // property 'mixin.env.disableRefMap', 'true'
+
+            mods {
+                ctidydemo {
+                    source sourceSets.main
+                }
+            }
+        }
+
         data {
             workingDirectory project.file('run/data')
 
-            // log4j2 bug fix
             property 'log4j2.formatMsgNoLookups', 'true'
 
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
+
+            property 'forge.enabledGameTestNamespaces', "${modid}"
 
             // mixin
             // property 'mixin.env.disableRefMap', 'true'
@@ -160,9 +189,14 @@ repositories {
             includeGroup "curse.maven"
         }
     }
-    maven {  // location of the maven that hosts JEI files
-        name = "Progwml6 maven"
+    maven {  // location of the maven that hosts JEI files before January 2023
+        name = "Progwml6's maven"
         url = "https://dvs1.progwml6.com/files/maven"
+    }
+    maven {
+        // location of the maven that hosts JEI files since January 2023
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/mezz/jei/"
     }
     maven {  // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
@@ -189,9 +223,12 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8:processor'
     testAnnotationProcessor 'org.spongepowered:mixin:0.8:processor'
 
-    compileOnly fg.deobf("mezz.jei:${jei_artifact_id}:${jei_version}:api")
+    compileOnly fg.deobf("mezz.jei:${jei_artifact_id}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:${jei_artifact_id}-forge-api:${jei_version}")
 
-    runtimeOnly fg.deobf("mezz.jei:${jei_artifact_id}:${jei_version}")
+    compileOnly fg.deobf(fileTree(dir: 'libs', include: ['*.jar']))
+
+    runtimeOnly fg.deobf("mezz.jei:${jei_artifact_id}-forge:${jei_version}")
     runtimeOnly fg.deobf("curse.maven:JustEnoughCharacters-250702:${jech_version}")
     runtimeOnly fg.deobf("curse.maven:Jade-324717:${jade_version}")
     runtimeOnly fg.deobf("curse.maven:AppleSkin-248787:${appleskin_version}")
@@ -221,7 +258,7 @@ jar {
             "Specification-Vendor": author_name,
             "Specification-Version": "1", // We are version 1 of ourselves
             "Implementation-Title": project.name,
-            "Implementation-Version": archiveVersion,
+            "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" : author_name,
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
             "MixinConfigs": "mixins.ctidedemo.json"
