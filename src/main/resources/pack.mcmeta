@@ -1,8 +1,9 @@
 {
     "pack": {
-        "description": "CTidy Demo resources",
-        "pack_format": 6,
-        "forge:resource_pack_format": 9,
-        "forge:data_pack_format": 10
+        "description": {
+            "text": "CTidy Demo resources"
+        },
+        "forge:server_data_pack_format": 12,
+        "pack_format": 13
     }
 }
