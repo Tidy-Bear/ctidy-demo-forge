@@ -1,8 +1,7 @@
 {
+  "required": true,
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_17",
-  "required": true,
   "package": "me.ctidy.mcmod.demo.mixin",
-  "mixins": [
-  ]
+  "refmap": "mixins.ctidydemo.refmap.json"
 }
