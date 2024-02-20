@@ -166,7 +166,7 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:${jei_artifact_id}-forge-api:${jei_version}")
     runtimeOnly fg.deobf("mezz.jei:${jei_artifact_id}-forge:${jei_version}")
 
-    runtimeOnly fg.deobf("curse.maven:JustEnoughCharacters-250702:${jech_version}")
+    // runtimeOnly fg.deobf("curse.maven:JustEnoughCharacters-250702:${jech_version}")
     runtimeOnly fg.deobf("curse.maven:Jade-324717:${jade_version}")
     runtimeOnly fg.deobf("curse.maven:catalogue-459701:${catalogue_version}")
     runtimeOnly fg.deobf("curse.maven:configured-457570:${configured_version}")
