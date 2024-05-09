@@ -26,3 +26,6 @@ All `.jar` files in the `<project_root>/libs` dir will be imported and de-obfusc
 ## Notes
 It's recommended to separate codes of mod itself (such as api), codes depending on Vanilla MC and codes depending on a specific platform (such as Forge, Fabric, etc.), though the template is only for Forge.
 When implementing a certain use case, use codes from Vanilla MC instead of platform-specific APIs, unless there are striking defects on Vanilla, or you are ready to coding on each platform.
+
+## LICENSE
+MIT license (LICENSE.txt) is used for this template project itself, while LGPL-v3 license (LICENSE_TEMPLATE.txt) is just for demo and allowed to be freely replaced by actual mod developers.
