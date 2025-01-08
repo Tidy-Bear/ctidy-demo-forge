@@ -240,6 +240,10 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.named('sourcesJar') {
+    def licence = rootProject.file('LICENSE')
+    if (!licence.exists()) {
+        return
+    }
     from(rootProject.file("LICENSE")) {
         rename { "${it}_${mod_name.replaceAll("\\W", "")}" }
     }
@@ -247,6 +251,10 @@ tasks.named('sourcesJar') {
 
 // Example for how to get properties into the manifest for reading by the runtime..
 tasks.named('jar', Jar) {
+    def licence = rootProject.file('LICENSE')
+    if (!licence.exists()) {
+        return
+    }
     from(rootProject.file("LICENSE")) {
         rename { "${it}_${mod_name.replaceAll("\\W", "")}" }
     }
