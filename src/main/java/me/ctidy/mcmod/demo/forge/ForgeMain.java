@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Tidy-Bear
+ * Copyright (c) 2024-2025 Tidy-Bear
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,43 @@
 
 package me.ctidy.mcmod.demo.forge;
 
-import me.ctidy.mcmod.demo.ModEnvConstants;
+import me.ctidy.mcmod.demo.CommonConfig;
+import me.ctidy.mcmod.demo.Constants;
+import me.ctidy.mcmod.demo.Dependencies;
+import me.ctidy.mcmod.demo.client.ClientConfig;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 /**
- * ModEnvConstants
+ * ForgeMain
  *
  * @author Tidy-Bear
  * @since 2024/6/2
  */
-@Mod(ModEnvConstants.MOD_ID)
-public class ForgeModEntry {
+@Mod(Constants.MOD_ID)
+public final class ForgeMain {
 
-    public ForgeModEntry() {
+    public ForgeMain() {
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(
                 () -> "ANY", (remote, isServer) -> true
         ));
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
+        if (Dist.CLIENT == FMLEnvironment.dist) {
+            ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
+        }
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        ModEnvConstants.LOGGER.info("HELLO FROM PRE-INIT");
+        Constants.LOGGER.info("HELLO FROM PRE-INIT");
+        Constants.LOGGER.info("Is Forge loaded: {}", Dependencies.FORGE.loaded());
+        Constants.LOGGER.info("Is Fabric loaded: {}", Dependencies.FABRIC.loaded());
     }
 
 }

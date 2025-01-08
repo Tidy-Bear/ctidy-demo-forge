@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Tidy-Bear
+ * Copyright (c) 2025 Tidy-Bear
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,42 @@
 
 package me.ctidy.mcmod.demo;
 
-import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import me.ctidy.mcmod.demo.platform.Services;
+import org.jetbrains.annotations.Unmodifiable;
 
 /**
- * ModEnvConstants
+ * Dependencies
  *
  * @author Tidy-Bear
- * @since 2024/6/2
+ * @since 2025/1/9
  */
-public final class ModEnvConstants {
+public enum Dependencies implements IModDependency {
 
-    public static final String MOD_ID = "ctidydemo";
-    public static final Logger LOGGER = LogManager.getLogger();
+    FORGE("forge"),
+    FABRIC("fabric");
 
-    public static ResourceLocation id(String id) {
-        return new ResourceLocation(MOD_ID, id);
+    @Unmodifiable
+    public static final Dependencies[] VALUES = values();
+
+    public final String modid;
+
+    private Boolean loaded;
+
+    Dependencies(String modid) {
+        this.modid = modid;
     }
 
-    private ModEnvConstants() { }
+    @Override
+    public String modid() {
+        return modid;
+    }
+
+    @Override
+    public boolean loaded() {
+        if (loaded == null) {
+            loaded = Services.PLATFORM.modLoaded(modid);
+        }
+        return loaded;
+    }
 
 }
