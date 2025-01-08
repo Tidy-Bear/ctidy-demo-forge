@@ -4,10 +4,8 @@
   "compatibilityLevel": "JAVA_${java_version}",
   "package": "me.ctidy.mcmod.demo.mixin",
   "refmap": "${mod_id}.refmap.json",
-  "mixins": [
-  ],
-  "client": [
-  ],
+  "mixins": [],
+  "client": [],
   "server": [],
   "injectors": {
     "defaultRequire": 1

@@ -221,7 +221,7 @@ def expandProps = [
 
         'minecraft_request': minecraft_request,
         'fml_request': fml_request,
-        'forge_request': forge_request
+        'forge_request': forge_request,
 ]
 void expandPropsToResources(ProcessResources task, Iterable<String> resourceFilter, Map<String, ?> props) {
     task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
