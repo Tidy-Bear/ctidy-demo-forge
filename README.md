@@ -1,17 +1,17 @@
 # CTidy's Forge Demo (Forge Mod Dev Template)
 
-CTidy's own Forge mod development template. Implementers should change `mod_id`, `version`, `author`, `licence`, etc., to actual values.
+CTidy's own Forge mod development template. Implementers should change `mod_id`, `version`, `author`, `license`, etc., to actual values.
 
 ## Built-ins
 ### Env
-- MinecraftForge (build by net.neoforged.gradle)
+- MinecraftForge (build by net.neoforged.moddev.legacyforge, legacy support from ModDevGradle)
 - SpongePowered Mixin
 - ParchmentMC Mappings
 
 ### Mod dependencies
 Allowed to add / remove freely.
-- JEI (JustEnoughItems)
-- Jade
+- JEI (Just Enough Items) / REI (Roughly Enough Items)
+- Jade / WTHIT (What The Hell Is That?) / TOP (The One Probe)
 - Catalogue
 - Configured
 - Searchables (Controlling's dependency)
@@ -25,4 +25,4 @@ It's recommended to separate codes of mod itself (such as api), codes depending 
 When implementing a certain use case, use codes from Vanilla MC instead of platform-specific APIs, unless there are striking defects on Vanilla, or you are ready to coding on each platform.
 
 ## LICENSE
-The MIT license (LICENSE) applies to the template project itself, whereas the LGPL-v3 license (LICENSE_TEMPLATE) is merely provided as an example and can be freely replaced by actual implementors.
+The MIT license (LICENSE) applies to the template project itself, whereas the LGPL-v3 license (LICENSE_EXAMPLE) is merely provided as an example and can be freely replaced by actual implementors.

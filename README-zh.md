@@ -1,17 +1,17 @@
 # CTidy's Forge Demo （Forge Mod 开发模板）
 
-CTidy（熊老师）自己的 Forge Mod 开发模板。具体开发时，请将 `mod_id`、`version`、`author`、`licence` 等内容修改为实际值。
+CTidy（熊老师）自己的 Forge Mod 开发模板。具体开发时，请将 `mod_id`、`version`、`author`、`license` 等内容修改为实际值。
 
 ## 预置组件
 ### 开发环境
-- MinecraftForge (通过 net.neoforged.gradle 构建)
+- MinecraftForge (通过 net.neoforged.moddev.legacyforge 构建，基于 ModDevGradle 的旧版本支持)
 - SpongePowered Mixin
 - ParchmentMC Mappings
 
 ### Mod 依赖
 可以按需要自由增删。
-- JEI (JustEnoughItems)
-- Jade
+- JEI (Just Enough Items) / REI (Roughly Enough Items)
+- Jade / WTHIT (What The Hell Is That?) / TOP (The One Probe)
 - Catalogue
 - Configured
 - Searchables (Controlling 前置)
@@ -25,4 +25,4 @@ CTidy（熊老师）自己的 Forge Mod 开发模板。具体开发时，请将 
 当实现某个功能用例时，尽量优先使用原版 MC 的代码，再考虑指定平台的 API，除非原版代码具有过于显著的缺陷，或者你准备好在每个平台上都进行一次实现。
 
 ## 开源协议
-MIT 协议 (LICENSE) 用于当前模板项目本身，而 LGPL-v3 协议 (LICENSE_TEMPLATE) 仅为示例，允许实现者自由替换。
+MIT 协议 (LICENSE) 用于当前模板项目本身，而 LGPL-v3 协议 (LICENSE_EXAMPLE) 仅为示例，允许实现者自由替换。
