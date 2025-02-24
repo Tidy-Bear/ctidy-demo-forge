@@ -5,48 +5,40 @@ pluginManagement {
         exclusiveContent {
             forRepository {
                 maven {
-                    name = 'Fabric'
-                    url = uri("https://maven.fabricmc.net")
+                    name 'NeoForge'
+                    url uri('https://maven.neoforged.net/releases')
                 }
             }
             filter {
-                includeGroup("net.fabricmc")
-                includeGroup("fabric-loom")
+                includeGroupAndSubgroups('net.neoforged')
+                includeGroup('codechicken')
             }
         }
         exclusiveContent {
+            // just in case
             forRepository {
                 maven {
-                    name = 'NeoForge'
-                    url = uri("https://maven.neoforged.net/releases")
+                    name 'Fabric'
+                    url uri('https://maven.fabricmc.net')
                 }
             }
             filter {
-                // includeGroupAndSubgroups has an issue until Gradle 8.7, see https://github.com/gradle/gradle/issues/26569
-                includeGroupByRegex("net\\.neoforged(?:\\..+)?")
-                includeGroup("codechicken")
+                includeGroup('net.fabricmc')
+                includeGroup('fabric-loom')
             }
         }
         exclusiveContent {
+            // just in case
             forRepository {
                 maven {
-                    name = 'Sponge Snapshots'
-                    url = uri("https://repo.spongepowered.org/repository/maven-public")
+                    name 'Sponge Snapshots'
+                    url uri('https://repo.spongepowered.org/repository/maven-public')
                 }
             }
             filter {
-                includeGroupByRegex("org\\.spongepowered(?:\\..+)?")
-                includeGroup("net.minecraftforge")
+                includeGroupAndSubgroups('org.spongepowered')
+                includeGroup('net.minecraftforge')
             }
-        }
-        exclusiveContent {
-            forRepository {
-                maven {
-                    name = 'ParchmentMC'
-                    url = 'https://maven.parchmentmc.org'
-                }
-            }
-            filter { includeGroupByRegex("org\\.parchmentmc(?:\\..+)?") }
         }
     }
 }
@@ -56,4 +48,4 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
-rootProject.name = "${mod_name.replaceAll("\\W", "")}"
+rootProject.name = "ctidy-demo-forge"

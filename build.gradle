@@ -1,9 +1,13 @@
 plugins {
+    id 'idea'
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle' version '6.0.+'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
-    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.78'
+}
+
+version = "$minecraft_version-$mod_version"
+base {
+    archivesName = project.name
 }
 
 java {
@@ -12,104 +16,78 @@ java {
     // withJavadocJar()
 }
 
-version = "$minecraft_version-$mod_version"
-base {
-    archivesName = project.name
-}
+legacyForge {
+    version = project.forge_version
 
-minecraft {
-    // Channel   | Version              | Comment
-    // --------- | -------------------- | ---------------
-    // official  | MCVersion            | Official field/method names from Mojang mapping files
-    // parchment | YYYY.MM.DD-MCVersion | Open community-sourced parameter names and javadocs layered on top of official
-    //
-    // You must be aware of the Mojang license when using the 'official' mappings.
-    // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
-    def parchmentmc_mapping_version = "$parchmentmc_version-$minecraft_version"
-    if (parchmentmc_mc_version != minecraft_version) {
-        parchmentmc_mapping_version = "$parchmentmc_mc_version-$parchmentmc_mapping_version"
-    }
-    mappings channel: 'parchment', version: parchmentmc_mapping_version
-
-    // Have all Eclipse/IntelliJ IDEA run configurations run the "prepareXXX" task before launching the game.
-    // enableEclipsePrepareRuns = true
-    // enableIdeaPrepareRuns = true
-
-    // Allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
-    // https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
-    copyIdeResources = true
-
-    // When true, this property will add the folder name of all declared run configurations to generated IDE run configurations.
-    // The folder name can be set on a run configuration using the "folderName" property.
-    // By default, the folder name of a run configuration is the name of the Gradle project containing it.
-    // generateRunFolders = true
-
-    // Automatically enable neoforge AccessTransformers if the file exists
-    // This location is hardcoded in FML and can not be changed.
-    // https://github.com/neoforged/FancyModLoader/blob/a952595eaaddd571fbc53f43847680b00894e0c1/loader/src/main/java/net/neoforged/fml/loading/moddiscovery/ModFile.java#L118
-    // https://docs.minecraftforge.net/en/latest/advanced/accesstransformers/
-    def at = file('src/main/resources/META-INF/accesstransformer.cfg')
-    if (at.exists()) {
-        accessTransformer = at
+    parchment {
+        minecraftVersion = project.parchment_minecraft_version
+        mappingsVersion = project.parchment_mappings_version
     }
 
-    // makeObfSourceJar = false
+    // Validate AT files and raise errors when they have invalid targets
+    // This option is false by default, but turning it on is recommended
+    validateAccessTransformers = true
 
     runs {
         configureEach {
-            workingDirectory project.file('runs')
+            // Separate working directory of each runs
+            gameDirectory = project.file("runs/$name")
 
             // log4j2 bug fix
-            property 'log4j2.formatMsgNoLookups', 'true'
+            systemProperty 'log4j2.formatMsgNoLookups', 'true'
+
+            // mixin
+            systemProperty 'mixin.debug.verbose', 'true'
+            systemProperty 'mixin.debug.export', 'true'
+            systemProperty 'mixin.checks', 'true'
+            systemProperty 'mixin.dumpTargetOnFailure', 'true'
+            systemProperty 'mixin.hotSwap', 'true'
 
             // Recommended logging data for a userdev environment
             // Added/remove as needed separated by commas.
             // "SCAN": For mods scan.
             // "REGISTRIES": For firing of registry events.
             // "REGISTRYDUMP": For getting the contents of all registries.
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
 
-            // Recommended logging level for the console
             // https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
-            property 'forge.logging.console.level', 'debug'
-
-            // mods {
-            //     "${project.mod_id}" {
-            //         source sourceSets.main
-            //     }
-            // }
+            logLevel = org.slf4j.event.Level.DEBUG
         }
 
         client {
-            workingDirectory project.file('runs/client')
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', project.mod_id
+            client()
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
         }
-
         server {
-            workingDirectory project.file('runs/server')
-            property 'forge.enabledGameTestNamespaces', project.mod_id
-            args '-nogui'
+            server()
+            programArgument '-nogui'
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
         }
-
         // This run config launches GameTestServer and runs all registered gametests, then exits.
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
-            workingDirectory project.file('runs/gametest')
-            property 'forge.enabledGameTestNamespaces', project.mod_id
+            type = 'gameTestServer'
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
         }
-
         data {
-            workingDirectory project.file('runs/data')
+            data()
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+
+    mods {
+        "$mod_id" {
+            sourceSet sourceSets.main
         }
     }
 }
 
-// Include resources generated by data generators.
-sourceSets.main.resources { srcDir 'src/generated/resources/' }
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.forge.mixins.json"
+}
 
 // /////////////////////////////
 // ////////// CAUTION //////////
@@ -119,17 +97,6 @@ sourceSets.main.resources { srcDir 'src/generated/resources/' }
 // Just using content filter instead.
 repositories {
     mavenCentral()
-    // https://docs.gradle.org/current/userguide/declaring_repositories.html#declaring_content_exclusively_found_in_one_repository
-    exclusiveContent {
-        forRepository {
-            maven {
-                name 'Sponge'
-                url 'https://repo.spongepowered.org/repository/maven-public'
-            }
-        }
-        // includeGroupAndSubgroups has an issue until Gradle 8.7, see https://github.com/gradle/gradle/issues/26569
-        filter { includeGroupByRegex('org\\.spongepowered(?:\\..+)?') }
-    }
     maven {
         name 'Curse Maven'
         url 'https://cursemaven.com'
@@ -141,66 +108,121 @@ repositories {
         content { includeGroup 'maven.modrinth' }
     }
     maven {
-        name 'Minecraft Forge'
-        url 'https://maven.minecraftforge.net/'
-    }
-    maven {
         name 'BlameJared'
         url 'https://maven.blamejared.com'
     }
     maven {
-        // location of the maven that hosts JEI files since January 2023
+        // JEI since January 2023
         name 'Jared\'s maven'
         url 'https://maven.blamejared.com/mezz/jei/'
     }
     maven {
-        // location of a maven mirror for JEI files, as a fallback
+        // JEI fallback
         name 'ModMaven'
         url 'https://modmaven.k-4u.nl'
+    }
+    maven {
+        // Architectury, Cloth Config, REI
+        name 'Shedaniel\'s maven'
+        url 'https://maven.shedaniel.me/'
+        content {
+            includeGroup 'me.shedaniel'
+            includeGroup 'me.shedaniel.cloth'
+            includeGroup 'dev.architectury'
+        }
+    }
+    maven {
+        // WAILA, WTHIT
+        url 'https://maven2.bai.lol'
+        content {
+            includeGroup 'mcp.mobius.waila'
+            includeGroup 'lol.bai'
+        }
     }
 }
 
 dependencies {
     implementation 'org.jetbrains:annotations:24.1.0'
 
-    // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
-    // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
-    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
-    minecraft "net.minecraftforge:forge:${forge_version}"
-
-    // mixin
+    // //////////// mixin ////////////
     annotationProcessor "org.spongepowered:mixin:$mixin_version:processor"
     testAnnotationProcessor "org.spongepowered:mixin:$mixin_version:processor"
 
-    compileOnly fg.deobf("mezz.jei:$jei_artifact_id-common-api:$jei_version")
-    compileOnly fg.deobf("mezz.jei:$jei_artifact_id-forge-api:$jei_version")
-    runtimeOnly fg.deobf("mezz.jei:$jei_artifact_id-forge:$jei_version")
+    // //////////// enough items ////////////
+    modCompileOnly "mezz.jei:$jei_artifact_id-common-api:$jei_version"
+    modCompileOnly "mezz.jei:$jei_artifact_id-forge-api:$jei_version"
 
-    // crash in dev env
-    // runtimeOnly fg.deobf("curse.maven:JustEnoughCharacters-250702:$jech_version")
-    runtimeOnly fg.deobf("curse.maven:Jade-324717:$jade_version")
-    runtimeOnly fg.deobf("curse.maven:catalogue-459701:$catalogue_version")
-    runtimeOnly fg.deobf("curse.maven:configured-457570:$configured_version")
-    runtimeOnly fg.deobf("curse.maven:searchables-858542:${searchables_version}")
-    runtimeOnly fg.deobf("curse.maven:controlling-250398:$controlling_version")
-    runtimeOnly fg.deobf("curse.maven:spark-361579:$spark_version")
-    runtimeOnly fg.deobf("curse.maven:XaeroMinimap-263420:$xaerominimap_version")
-    runtimeOnly fg.deobf("curse.maven:XaeroWorldmap-317780:$xaeroworldmap_version")
+    // Always depend on the REI API to compile
+    switch (project.runtime_variants_enough_items) {
+        case 'jei': {
+            modRuntimeOnly "mezz.jei:$jei_artifact_id-forge:$jei_version"
+
+            compileOnly 'me.shedaniel.cloth:basic-math:0.6.1'
+            modCompileOnly "dev.architectury:architectury-forge:$architectury_version"
+            modCompileOnly "me.shedaniel.cloth:cloth-config-forge:$cloth_config_version"
+            modCompileOnly "me.shedaniel:RoughlyEnoughItems-forge:$rei_version"
+
+            break
+        }
+        case 'rei': {
+            implementation 'me.shedaniel.cloth:basic-math:0.6.1'
+            modImplementation "dev.architectury:architectury-forge:$architectury_version"
+            modImplementation "me.shedaniel.cloth:cloth-config-forge:$cloth_config_version"
+            modImplementation "me.shedaniel:RoughlyEnoughItems-forge:$rei_version"
+
+            break
+        }
+        default: {
+            modCompileOnly "dev.architectury:architectury-forge:$architectury_version"
+            modCompileOnly "me.shedaniel.cloth:cloth-config-forge:$cloth_config_version"
+            modCompileOnly "me.shedaniel:RoughlyEnoughItems-forge:$rei_version"
+
+            break
+        }
+    }
+
+    // //////////// looking tooltip (Jade / WTHIT / TOP) ////////////
+    // jade
+    if (project.runtime_variants_looking_tooltip == 'jade') {
+        modImplementation "curse.maven:jade-324717:$jade_version"
+    } else {
+        modCompileOnly "curse.maven:jade-324717:$jade_version"
+    }
+
+    // wthit
+    if (project.runtime_variants_looking_tooltip == 'wthit') {
+        modRuntimeOnly "mcp.mobius.waila:wthit:forge-$wthit_version"
+        modRuntimeOnly "lol.bai:badpackets:forge-$badpackets_version"
+    } else {
+        modCompileOnly "mcp.mobius.waila:wthit-api:forge-$wthit_version"
+    }
+
+    // top
+    if (project.runtime_variants_looking_tooltip == 'top') {
+        modImplementation "curse.maven:the-one-probe-245211:$top_version"
+    } else {
+        compileOnly "curse.maven:the-one-probe-245211:$top_version"
+    }
+
+    // //////////// QoL ////////////
+    modRuntimeOnly "curse.maven:catalogue-459701:$catalogue_version"
+
+    modRuntimeOnly "curse.maven:configured-457570:$configured_version"
+
+    modRuntimeOnly "curse.maven:searchables-858542:$searchables_version"
+    modRuntimeOnly "curse.maven:controlling-250398:$controlling_version"
+
+    modRuntimeOnly "curse.maven:spark-361579:$spark_version"
+
+    modRuntimeOnly "curse.maven:XaeroMinimap-263420:$xaerominimap_version"
+    modRuntimeOnly "curse.maven:XaeroWorldmap-317780:$xaeroworldmap_version"
 }
 
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-    config "${mod_id}.forge.mixins.json"
+// Include resources generated by data generators.
+sourceSets.main.resources { srcDir 'src/generated/resources/' }
 
-    dumpTargetOnFailure = true
-    checks = true
-    hotSwap = true
-    debug.verbose = true
-    debug.export = true
-}
-
-// A missing property will result in an error.
-// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
+// This block of code expands all declared replace properties in the specified resource targets.
+// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 def filter = ['pack.mcmeta', '*.mixins.json', 'META-INF/mods.toml']
 def expandProps = [
         'version': version,
@@ -223,7 +245,7 @@ def expandProps = [
         'fml_request': fml_request,
         'forge_request': forge_request,
 ]
-void expandPropsToResources(ProcessResources task, Iterable<String> resourceFilter, Map<String, ?> props) {
+static void expandPropsToResources(ProcessResources task, Iterable<String> resourceFilter, Map<String, ?> props) {
     task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     task.filesMatching(resourceFilter) {
         expand props
@@ -237,26 +259,24 @@ tasks.withType(ProcessResources).configureEach {
 tasks.withType(JavaCompile).configureEach {
     options.release = Integer.parseInt(java_version)
     options.encoding = 'UTF-8'
+    options.deprecation = false
+}
+
+static void eachLicences(Project project, Closure<?> closure) {
+    project.fileTree(dir: project.rootDir, include: 'LICENSE*')
+            .files.each { closure(it) }
 }
 
 tasks.named('sourcesJar') {
-    def licence = rootProject.file('LICENSE')
-    if (!licence.exists()) {
-        return
-    }
-    from(rootProject.file("LICENSE")) {
-        rename { "${it}_${mod_name.replaceAll("\\W", "")}" }
+    eachLicences(rootProject) { File file ->
+        jar.from(file)
     }
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
 tasks.named('jar', Jar) {
-    def licence = rootProject.file('LICENSE')
-    if (!licence.exists()) {
-        return
-    }
-    from(rootProject.file("LICENSE")) {
-        rename { "${it}_${mod_name.replaceAll("\\W", "")}" }
+    eachLicences(rootProject) { File file ->
+        jar.from(file)
     }
 
     manifest {
@@ -268,18 +288,11 @@ tasks.named('jar', Jar) {
                 'Implementation-Version': project.jar.archiveVersion,
                 'Implementation-Vendor' : author,
                 'Built-On-Minecraft'    : minecraft_version,
-                'Implementation-Timestamp': new Date().format('yyyy-MM-dd\'T\'HH:mm:ssZ')
-                // 'MixinConfigs': "${mod_id}.forge.mixins.json"  // MixinGradle will handle it
+                'Implementation-Timestamp': new Date().format('yyyy-MM-dd\'T\'HH:mm:ssZ'),
+                'MixinConfigs': "${mod_id}.forge.mixins.json",
         ])
     }
-
-    // Preferred method to reobfuscate the jar file
-    jar.finalizedBy('reobfJar')
 }
-// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
-// tasks.named('publish') {
-//     dependsOn 'reobfJar'
-// }
 
 publishing {
     publications {
@@ -290,8 +303,17 @@ publishing {
     }
     repositories {
         maven {
+            name = "Local"
             // url System.getenv("local_maven_url")
-            url "file:///$project.projectDir/mcmodsrepo"
+            url = file('build/repo').toURI()
         }
+    }
+}
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
     }
 }

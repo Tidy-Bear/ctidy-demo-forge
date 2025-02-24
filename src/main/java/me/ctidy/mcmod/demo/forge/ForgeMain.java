@@ -45,9 +45,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 public final class ForgeMain {
 
     public ForgeMain() {
-        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(
-                () -> "ANY", (remote, isServer) -> true
-        ));
+        ModLoadingContext.get().registerDisplayTest(IExtensionPoint.DisplayTest.IGNORE_ALL_VERSION);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
         if (Dist.CLIENT == FMLEnvironment.dist) {

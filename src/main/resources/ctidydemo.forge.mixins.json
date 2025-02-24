@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_${java_version}",
   "package": "me.ctidy.mcmod.demo.mixin",
   "refmap": "${mod_id}.refmap.json",
-  "mixins": [],
+  "mixins": [
+    "MinecraftServerMixin"
+  ],
   "client": [],
   "server": [],
   "injectors": {
